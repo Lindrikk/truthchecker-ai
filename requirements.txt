@@ -1,4 +1,4 @@
-streamlit
-groq
-requests
-duckduckgo_search
+     streamlit
+     groq
+     requests
+     ddgs
