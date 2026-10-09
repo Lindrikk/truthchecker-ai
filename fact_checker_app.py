@@ -3,7 +3,7 @@ TruthCheck AI v2
 
 Install:  pip install streamlit groq requests ddgs
 Keys:     put them in .streamlit/secrets.toml (never in the code):
-              GROQ_API_KEY = "..."
+              GROQ_API_KEY = "your-groq-key"
               GOOGLE_FACT_CHECK_API_KEY = "..."
 Run:      streamlit run fact_checker_app_fixed.py
 """
@@ -39,8 +39,8 @@ def get_secret(name: str) -> str:
     return os.environ.get(name, "")
 
 
-GROQ_API_KEY = "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"
-FACT_CHECK_KEY = "AIzaSyClVZXSyi1PfgwIVTAmJsY4u8N_5Cf92BQ"
+GROQ_API_KEY = get_secret("GROQ_API_KEY")
+FACT_CHECK_KEY = get_secret("GOOGLE_FACT_CHECK_API_KEY")
 
 TEXT_MODEL = "llama-3.3-70b-versatile"
 # Per Groq's vision docs, this is the current image-capable model. The Llama 4
@@ -129,6 +129,13 @@ div[data-baseweb="textarea"]:focus-within{border-color:var(--pink);box-shadow:0 
 .tc-ok{display:inline-block;margin-left:.5rem;padding:.05rem .55rem;border-radius:999px;background:#E7F6EF;color:#2F9E75;font-size:.7rem;font-weight:600;vertical-align:middle;}
 .tc-kv{display:grid;grid-template-columns:96px 1fr;gap:.45rem 1rem;font-size:.9rem;line-height:1.55;}
 .tc-kv span:nth-child(odd){color:var(--muted);}
+:root{color-scheme:light;}
+div[data-baseweb="textarea"],div[data-baseweb="base-input"],.stTextArea textarea{background:#fff !important;color:#3A2A33 !important;-webkit-text-fill-color:#3A2A33;}
+.stTextArea textarea::placeholder{color:#8F7A86 !important;-webkit-text-fill-color:#8F7A86;opacity:1;}
+[data-testid="stFileUploaderDropzone"],[data-testid="stFileUploaderDropzone"] *{color:#3A2A33;}
+[data-testid="stFileUploaderDropzone"] small{color:#8F7A86 !important;}
+[data-testid="stExpander"],[data-testid="stExpander"] details,[data-testid="stExpander"] p{background:#fff;color:#3A2A33;}
+.stMarkdown,.stMarkdown p,label,[data-testid="stCaptionContainer"]{color:#3A2A33;}
 """
 st.markdown("<style>" + THEME_CSS + "</style>", unsafe_allow_html=True)
 st.markdown(
