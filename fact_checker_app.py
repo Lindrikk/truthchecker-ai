@@ -3,7 +3,7 @@ TruthCheck AI v2
 
 Install:  pip install streamlit groq requests ddgs
 Keys:     put them in .streamlit/secrets.toml (never in the code):
-              GROQ_API_KEY = "your-groq-key"
+              GROQ_API_KEY = "..."
               GOOGLE_FACT_CHECK_API_KEY = "..."
 Run:      streamlit run fact_checker_app_fixed.py
 """
@@ -26,7 +26,7 @@ except ImportError:
     from duckduckgo_search import DDGS  # older name
 
 # --- 1. CONFIGURATION ---
-st.set_page_config(page_title="TruthCheck", page_icon="🌸", layout="centered",
+st.set_page_config(page_title="TruthCheck", page_icon="✅", layout="wide",
                    initial_sidebar_state="collapsed")
 
 
@@ -77,79 +77,235 @@ NEGATIVE_RATINGS = ("false", "fake", "hoax", "scam", "pants on fire", "fabricate
 POSITIVE_RATINGS = ("true", "correct", "accurate", "legit", "real")
 
 THEME_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-:root{--bg:#FFF8FB;--card:#FFFFFF;--ink:#3A2A33;--muted:#8F7A86;--line:#F4DCE7;--pink:#E85D93;--pink-dark:#D1447D;--pink-soft:#FDEAF2;}
-html,body,[class*="css"],.stApp{font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;color:var(--ink);}
-.stApp{background:var(--bg);}
-#MainMenu,footer,[data-testid="stToolbar"],[data-testid="stDecoration"]{display:none;}
-header[data-testid="stHeader"]{background:transparent;}
-.block-container{max-width:720px;padding-top:2.2rem;padding-bottom:4rem;}
-[data-testid="stSidebar"]{background:#fff;border-right:1px solid var(--line);}
-.tc-hero{text-align:center;margin:0 0 1.8rem;}
-.tc-badge{display:inline-block;padding:.25rem .85rem;border-radius:999px;background:var(--pink-soft);color:var(--pink-dark);font-size:.72rem;font-weight:700;letter-spacing:.1em;}
-.tc-hero h1{font-size:2.5rem;font-weight:700;margin:.7rem 0 .35rem;letter-spacing:-.03em;color:var(--ink);padding:0;}
-.tc-hero p{color:var(--muted);font-size:.98rem;margin:0 auto;max-width:460px;line-height:1.55;}
-.stTabs [data-baseweb="tab-list"]{gap:.3rem;border-bottom:1px solid var(--line);}
-.stTabs [data-baseweb="tab"]{height:2.6rem;padding:0 1rem;background:transparent;color:var(--muted);font-weight:500;}
-.stTabs [aria-selected="true"]{color:var(--pink-dark) !important;}
-.stTabs [data-baseweb="tab-highlight"]{background-color:var(--pink) !important;}
-.stTabs [data-baseweb="tab-border"]{display:none;}
-div[data-baseweb="textarea"]{background:#fff;border:1px solid var(--line);border-radius:16px;}
-div[data-baseweb="textarea"]:focus-within{border-color:var(--pink);box-shadow:0 0 0 3px rgba(232,93,147,.14);}
-.stTextArea textarea{background:transparent;color:var(--ink);font-size:.96rem;padding:1rem;line-height:1.6;}
-[data-testid="stFileUploaderDropzone"]{background:#fff;border:1.5px dashed #F2B8D0;border-radius:16px;padding:1.6rem;}
-[data-testid="stFileUploaderDropzone"] button{border-radius:999px;border:1px solid var(--line);color:var(--pink-dark);background:#fff;}
-[data-testid="stFileUploaderDropzone"] button:hover{border-color:var(--pink);color:var(--pink-dark);}
-.stButton>button{background:var(--pink);color:#fff;border:none;border-radius:999px;padding:.72rem 1.4rem;font-weight:600;font-size:1rem;box-shadow:0 8px 20px rgba(232,93,147,.28);transition:all .15s ease;}
-.stButton>button p{color:#fff;}
-.stButton>button:hover{background:var(--pink-dark);color:#fff;transform:translateY(-1px);}
-.stButton>button:focus:not(:active){color:#fff;border:none;box-shadow:0 8px 20px rgba(232,93,147,.28);}
-.stButton>button:active{background:var(--pink-dark);color:#fff;transform:translateY(0);}
-[data-testid="stExpander"]{border:1px solid var(--line);border-radius:14px;background:#fff;}
-[data-testid="stExpander"] summary{color:var(--muted);font-size:.9rem;}
-[data-testid="stAlert"]{border-radius:14px;}
-[data-testid="stImage"] img{border-radius:14px;border:1px solid var(--line);}
-.tc-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1.4rem 1.5rem;margin:1.2rem 0;box-shadow:0 10px 32px rgba(232,93,147,.07);}
-.tc-verdict{display:flex;align-items:center;gap:.65rem;margin-bottom:.9rem;}
-.tc-dot{width:12px;height:12px;border-radius:50%;flex:none;}
-.tc-label{font-size:1.4rem;font-weight:700;letter-spacing:-.015em;}
-.tc-conf{margin-left:auto;font-size:.82rem;color:var(--muted);font-weight:500;}
-.tc-bar{height:6px;background:#F7E8EF;border-radius:999px;overflow:hidden;margin-bottom:1.1rem;}
-.tc-bar>div{height:100%;border-radius:999px;}
-.tc-text{font-size:.97rem;line-height:1.7;color:var(--ink);}
-.tc-list{margin:.8rem 0 0;padding-left:1.1rem;color:#5A4651;font-size:.92rem;line-height:1.65;}
-.tc-note{margin-top:.9rem;font-size:.82rem;color:var(--muted);line-height:1.5;}
-.tc-chip{display:inline-block;margin:.3rem .3rem 0 0;padding:.22rem .7rem;border-radius:999px;background:var(--pink-soft);color:var(--pink-dark);font-size:.78rem;font-weight:500;}
-.tc-h{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .5rem;}
-.tc-src{padding:.8rem 0;border-bottom:1px solid #F8E8EF;}
-.tc-src:last-child{border-bottom:none;padding-bottom:0;}
-.tc-src a{color:var(--ink);font-weight:600;text-decoration:none;font-size:.93rem;line-height:1.4;}
-.tc-src a:hover{color:var(--pink-dark);}
-.tc-src small{display:block;color:var(--muted);margin-top:.2rem;font-size:.8rem;line-height:1.5;}
-.tc-ok{display:inline-block;margin-left:.5rem;padding:.05rem .55rem;border-radius:999px;background:#E7F6EF;color:#2F9E75;font-size:.7rem;font-weight:600;vertical-align:middle;}
-.tc-kv{display:grid;grid-template-columns:96px 1fr;gap:.45rem 1rem;font-size:.9rem;line-height:1.55;}
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap');
+@property --n{syntax:'<integer>';inherits:false;initial-value:0;}
+:root{
+  /* Palette: "Forest and lime" from taste-skill. Lime marks the action and the progress track only. */
+  --bg:#0f1f10;--surface:#162a17;--surface-2:#1e3720;--ink:#ffffff;--muted:#a3ada3;
+  --accent:#c6f19d;--accent-strong:#dcf9bf;--accent-ink:#0f1f10;
+  --true:#8fe0a4;--false:#ff8a75;--mislead:#f5c451;--unver:#a3ada3;
+  --font:'Schibsted Grotesk',system-ui,-apple-system,sans-serif;
+  --ease-out:cubic-bezier(.22,1,.36,1);--ease-soft:cubic-bezier(.33,1,.68,1);
+  --t-press:140ms;--t-hover:180ms;--t-reveal:800ms;
+  --gutter:clamp(1rem,4vw,3rem);
+}
+.stApp{background:var(--bg);color:var(--ink);font-family:var(--font);}
+.stApp :is(p,li,label,textarea,button,h1,h2,h3,div,small,a,dt,dd,b){font-family:var(--font);}
+#MainMenu,footer,header[data-testid="stHeader"],[data-testid="stToolbar"],[data-testid="stDecoration"],
+[data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"],[data-testid="stExpandSidebarButton"]{display:none !important;}
+[data-testid="stMain"]{overflow-x:clip;}
+.block-container{max-width:1280px;padding:1.5rem var(--gutter) 3rem;}
+::selection{background:var(--accent);color:var(--accent-ink);}
+[data-testid="stHeaderActionElements"]{display:none !important;}
+
+/* Top bar: wordmark and one link */
+.tc-top{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin:0 0 clamp(2.5rem,9vh,5.5rem);}
+.tc-wordmark{font-size:1.2rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);}
+.tc-top a{color:var(--ink) !important;font-weight:600;font-size:1rem;text-decoration:underline;text-decoration-color:transparent;
+  text-underline-offset:.25em;transition:text-decoration-color var(--t-hover) ease;}
+.tc-top a:hover{text-decoration-color:var(--accent);}
+
+/* The question, as wide as the page allows */
+.tc-hero h1{font-size:clamp(5rem,21.5vw,21rem);font-weight:800;letter-spacing:-.055em;line-height:.86;margin:0 0 clamp(2rem,5vh,3.5rem);padding:0;color:var(--ink);}
+.tc-lines .line{display:inline-block;overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em;vertical-align:bottom;}
+.tc-lines .line:first-child{margin-right:.22em;}
+.tc-lines .line>span{display:block;}
+@media (max-width:760px){.tc-lines .line{display:block;margin-right:0;}.tc-hero h1{font-size:clamp(5rem,23vw,9rem);}}
+.tc-lede{font-size:clamp(1.2rem,1.7vw,1.5rem);line-height:1.45;color:var(--ink);margin:0 0 1.75rem;max-width:36ch;letter-spacing:-.01em;}
+
+/* Columns */
+[data-testid="stHorizontalBlock"]{gap:clamp(1.5rem,4vw,4rem) !important;}
+
+/* Tabs */
+[data-testid="stTabs"] [role="tablist"]{gap:2rem;background:transparent;height:3rem;}
+[data-testid="stTabs"] [role="tablist"]::after{display:none;}
+[data-testid="stTab"]{height:3rem;padding:0;background:transparent;color:var(--muted);transition:color var(--t-hover) ease;}
+[data-testid="stTab"] p{font-size:1.1rem;font-weight:600;color:inherit;}
+[data-testid="stTab"]:hover{color:var(--ink);}
+[data-testid="stTab"][aria-selected="true"]{color:var(--ink) !important;}
+[data-testid="stTab"] [class*="SelectionIndicator"]{background-color:var(--accent) !important;height:3px;}
+[data-testid="stTabPanel"]{padding-top:1rem;}
+
+/* Inputs */
+[data-testid="stTextAreaRootElement"]{background:var(--surface) !important;border:none !important;border-radius:0 !important;
+  transition:background-color var(--t-hover) ease;}
+[data-testid="stTextAreaRootElement"]:hover{background:var(--surface-2) !important;}
+[data-testid="stTextAreaRootElement"]:focus-within{outline:2px solid var(--accent);outline-offset:0;}
+.stTextArea textarea{background:transparent;color:var(--ink);font-size:1.08rem;padding:1.25rem;line-height:1.6;caret-color:var(--accent);}
+.stTextArea textarea::placeholder{color:var(--muted);opacity:1;}
+[data-testid="stFileUploaderDropzone"]{background:var(--surface);border:none;border-radius:0;padding:2.25rem 1.5rem;transition:background-color var(--t-hover) ease;}
+[data-testid="stFileUploaderDropzone"]:hover{background:var(--surface-2);}
+[data-testid="stFileUploaderDropzone"] button{border-radius:0;border:none;background:var(--surface-2);color:var(--ink);}
+[data-testid="stFileUploaderDropzone"]:hover button{background:var(--bg);}
+
+/* Buttons. Base = the example rows; .st-key-run = the one lime action */
+.stButton>button{border:none;border-radius:0;transition:transform var(--t-press) var(--ease-out),background-color var(--t-hover) ease,color var(--t-hover) ease;}
+.stButton>button:active{transform:scale(.985);}
+.stButton>button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.stButton>button:focus:not(:active){border:none;box-shadow:none;}
+.st-key-run button{background:var(--accent);color:var(--accent-ink);min-height:3.8rem;padding:1rem 1.6rem;margin-top:.5rem;}
+.st-key-run button p{color:var(--accent-ink);font-size:1.15rem;font-weight:700;letter-spacing:-.01em;}
+.st-key-run button:hover,.st-key-run button:active,.st-key-run button:focus:not(:active){background:var(--accent-strong);color:var(--accent-ink);}
+[class*="st-key-ex_"] button{background:var(--surface);color:var(--ink);min-height:0;padding:1rem 1.15rem;justify-content:flex-start;text-align:left;}
+[class*="st-key-ex_"] button > div,[class*="st-key-ex_"] button [data-testid="stMarkdownContainer"]{justify-content:flex-start;text-align:left;width:100%;}
+[class*="st-key-ex_"] button p{font-size:1rem;font-weight:500;line-height:1.45;text-align:left;color:var(--ink);white-space:normal;overflow:visible;text-overflow:clip;}
+[class*="st-key-ex_"] button *{white-space:normal !important;overflow:visible !important;text-overflow:clip !important;}
+[class*="st-key-ex_"] button:hover{background:var(--surface-2);color:var(--ink);}
+[class*="st-key-ex_"] button:hover p{color:var(--ink);}
+[class*="st-key-ex_"]{margin-bottom:-.35rem;}
+
+/* Side column */
+.tc-side-h{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:.6rem 0 .3rem;}
+.tc-side-p{color:var(--muted);font-size:.98rem;line-height:1.5;margin:0 0 1rem;}
+.tc-guide{margin:2.4rem 0 0;}
+.tc-guide dl{display:grid;grid-template-columns:auto 1fr;gap:1rem 1rem;margin:1rem 0 0;}
+.tc-guide dt{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1.05rem;white-space:nowrap;}
+.tc-guide dt::before{content:"";width:.8rem;height:.8rem;background:var(--c);flex:none;}
+.tc-guide dd{margin:0;font-size:1rem;line-height:1.5;color:var(--ink);}
+
+[data-testid="stExpander"]{margin-top:1.25rem;}
+[data-testid="stExpander"] details{border:none;border-radius:0;background:var(--surface);}
+[data-testid="stExpander"] summary{color:var(--muted);transition:color var(--t-hover) ease;}
+[data-testid="stExpander"] summary:hover{color:var(--ink);}
+[data-testid="stAlert"]{border-radius:0;}
+[data-testid="stImage"] img{border-radius:0;}
+[data-testid="stSpinner"] p{color:var(--muted);font-size:1rem;}
+
+/* Results */
+.tc-card{background:var(--surface);padding:clamp(1.5rem,3.5vw,2.4rem);margin:1.25rem 0 0;}
+.tc-results-gap{height:clamp(2rem,6vh,3.5rem);}
+.tc-label{display:block;overflow:hidden;font-size:clamp(2.8rem,7vw,5.5rem);font-weight:800;letter-spacing:-.05em;line-height:.92;padding-bottom:.08em;margin-bottom:-.08em;}
+.tc-label>span{display:block;}
+.tc-meter{display:flex;align-items:baseline;gap:.6rem;margin:1.6rem 0 .8rem;}
+.tc-num{--n:var(--to);counter-reset:n var(--n);font-size:2.2rem;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;}
+.tc-num::before{content:counter(n);}
+.tc-num::after{content:"%";}
+.tc-meter small{color:var(--muted);font-size:1rem;}
+.tc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+.tc-bar{height:8px;background:var(--surface-2);margin-bottom:1.8rem;overflow:hidden;}
+.tc-bar>div{height:100%;transform-origin:left center;transform:scaleX(var(--w));}
+.tc-text{font-size:1.12rem;line-height:1.6;color:var(--ink);}
+.tc-list{margin:1.1rem 0 0;padding-left:1.2rem;color:var(--ink);font-size:1rem;line-height:1.6;}
+.tc-list li{margin-bottom:.35rem;}
+.tc-list li::marker{color:var(--muted);}
+.tc-note{margin-top:1.4rem;font-size:.95rem;color:var(--muted);line-height:1.55;}
+.tc-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem;}
+.tc-chip{display:inline-block;padding:.4rem .75rem;background:var(--surface-2);color:var(--ink);font-size:.92rem;}
+.tc-h{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:0 0 1rem;}
+.tc-src{display:block;padding:1rem 1.1rem;margin:0 -1.1rem;transition:background-color var(--t-hover) ease;}
+.tc-src:hover{background:var(--surface-2);}
+.tc-src a{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:.2em;
+  font-size:1.02rem;line-height:1.4;transition:text-decoration-color var(--t-hover) ease;}
+.tc-src a:hover{color:var(--ink);text-decoration-color:var(--accent);}
+.tc-src small{display:block;color:var(--muted);margin-top:.3rem;font-size:.92rem;line-height:1.5;}
+.tc-ok{display:inline-block;margin-left:.5rem;color:var(--accent);font-size:.88rem;font-weight:600;}
+.tc-kv{display:grid;grid-template-columns:110px 1fr;gap:.6rem 1rem;font-size:1rem;line-height:1.55;}
 .tc-kv span:nth-child(odd){color:var(--muted);}
-:root{color-scheme:light;}
-div[data-baseweb="textarea"],div[data-baseweb="base-input"],.stTextArea textarea{background:#fff !important;color:#3A2A33 !important;-webkit-text-fill-color:#3A2A33;}
-.stTextArea textarea::placeholder{color:#8F7A86 !important;-webkit-text-fill-color:#8F7A86;opacity:1;}
-[data-testid="stFileUploaderDropzone"],[data-testid="stFileUploaderDropzone"] *{color:#3A2A33;}
-[data-testid="stFileUploaderDropzone"] small{color:#8F7A86 !important;}
-[data-testid="stExpander"],[data-testid="stExpander"] details,[data-testid="stExpander"] p{background:#fff;color:#3A2A33;}
-.stMarkdown,.stMarkdown p,label,[data-testid="stCaptionContainer"]{color:#3A2A33;}
+
+/* How a claim is checked: the claim travels a track through six stages */
+.tc-how{margin-top:clamp(5rem,14vh,9rem);scroll-margin-top:2rem;}
+.tc-how-head{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(1.5rem,4vw,4rem);align-items:end;margin-bottom:clamp(2.5rem,6vh,4rem);}
+.tc-how h2{font-size:clamp(2.6rem,6.5vw,5.6rem);font-weight:800;letter-spacing:-.05em;line-height:.9;margin:0;padding:0;color:var(--ink);}
+.tc-how-head p{font-size:1.15rem;line-height:1.5;margin:0;color:var(--ink);max-width:34ch;}
+.tc-track{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0 1.5rem;position:relative;}
+.tc-track::before,.tc-track::after{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--surface-2);}
+.tc-track::after{background:var(--accent);transform-origin:left center;}
+.tc-stage{padding-top:2.4rem;position:relative;}
+.tc-stage::before{content:"";position:absolute;top:-5px;left:0;width:16px;height:16px;background:var(--bg);box-shadow:inset 0 0 0 4px var(--accent);z-index:1;}
+.tc-big{--n:var(--to);counter-reset:n var(--n);display:block;font-size:clamp(3.4rem,6vw,5.6rem);font-weight:800;letter-spacing:-.05em;line-height:.9;font-variant-numeric:tabular-nums;color:var(--ink);}
+.tc-big::before{content:counter(n);}
+.tc-stage b{display:block;font-size:1.1rem;font-weight:700;margin:.7rem 0 .5rem;color:var(--ink);}
+.tc-stage p{margin:0;font-size:.98rem;line-height:1.5;color:var(--ink);}
+.tc-stage small{display:block;margin-top:.6rem;color:var(--muted);font-size:.9rem;}
+.tc-out{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 1.25rem;margin-top:clamp(2.5rem,6vh,4rem);padding:1.4rem 1.6rem;background:var(--surface);}
+.tc-out b{font-size:1.15rem;}
+.tc-out span{display:inline-flex;align-items:center;gap:.45rem;font-weight:600;font-size:1.05rem;}
+.tc-out span::before{content:"";width:.75rem;height:.75rem;background:var(--c);}
+@media (max-width:980px){
+  .tc-track{grid-template-columns:1fr;gap:2.4rem 0;padding-left:2.4rem;}
+  .tc-track::before,.tc-track::after{left:5px;right:auto;top:0;bottom:0;width:6px;height:auto;}
+  .tc-track::after{transform-origin:center top;}
+  .tc-stage{padding-top:0;display:grid;grid-template-columns:minmax(5.5rem,auto) 1fr;column-gap:1.25rem;align-items:start;}
+  .tc-stage::before{top:.35rem;left:calc(-2.4rem);}
+  .tc-big{grid-row:span 3;font-size:clamp(3.2rem,14vw,4.6rem);}
+  .tc-stage b{margin-top:.2rem;}
+  .tc-how-head{grid-template-columns:1fr;}
+}
+
+/* Close */
+.tc-foot{margin-top:clamp(5rem,14vh,9rem);}
+.tc-tips{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(1.5rem,4vw,4rem);}
+.tc-tips h2{font-size:clamp(2rem,4vw,3.2rem);font-weight:800;letter-spacing:-.045em;line-height:.95;margin:0;padding:0;color:var(--ink);}
+.tc-tips dl{display:grid;grid-template-columns:minmax(0,12rem) 1fr;gap:1.5rem 2rem;margin:0;}
+.tc-tips dt{font-weight:700;font-size:1.15rem;color:var(--ink);}
+.tc-tips dd{margin:0;font-size:1.08rem;line-height:1.55;color:var(--ink);}
+.tc-mark{font-size:clamp(3.4rem,15vw,14rem);font-weight:800;letter-spacing:-.065em;line-height:.78;color:var(--surface-2);margin:clamp(4rem,12vh,7rem) 0 1.4rem -.04em;white-space:nowrap;}
+.tc-fine{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem 2rem;color:var(--muted);font-size:.95rem;line-height:1.5;margin:0;}
+.tc-fine a{color:var(--ink) !important;}
+@media (max-width:760px){
+  .tc-tips,.tc-tips dl{grid-template-columns:1fr;}
+  .tc-tips dl{gap:.35rem 0;}
+  .tc-tips dd{margin-bottom:1.1rem;}
+  .tc-kv{grid-template-columns:90px 1fr;}
+  .tc-guide dl{grid-template-columns:1fr;gap:.25rem;}
+  .tc-guide dd{margin-bottom:.8rem;}
+}
+
+/* Motion. Only travel is added here; with reduced motion the page is simply finished. */
+@keyframes tc-line{from{transform:translateY(105%);}}
+@keyframes tc-rise{from{opacity:0;transform:translateY(22px);}}
+@keyframes tc-fill{from{transform:scaleX(0);}}
+@keyframes tc-fill-y{from{transform:scaleY(0);}}
+@keyframes tc-count{from{--n:0;}}
+@keyframes tc-open{from{clip-path:inset(0 0 100% 0);}}
+@keyframes tc-mark{from{transform:translateX(4%);opacity:.3;}}
+@keyframes tc-stop{from{box-shadow:inset 0 0 0 4px var(--surface-2);}}
+@media (prefers-reduced-motion:no-preference){
+  /* Signature: the question rises out of its own baseline */
+  .tc-lines .line>span{animation:tc-line 1000ms var(--ease-out) both;animation-delay:calc(var(--i)*120ms + 150ms);}
+  .tc-top{animation:tc-rise 700ms var(--ease-out) both;}
+  .tc-lede{animation:tc-rise var(--t-reveal) var(--ease-out) 450ms both;}
+  [data-testid="stTabs"]{animation:tc-rise var(--t-reveal) var(--ease-out) 550ms both;}
+  .st-key-run{animation:tc-rise var(--t-reveal) var(--ease-out) 650ms both;}
+  .tc-side-h,.tc-side-p{animation:tc-rise var(--t-reveal) var(--ease-out) 600ms both;}
+  [class*="st-key-ex_"]{animation:tc-rise 700ms var(--ease-out) both;}
+  .st-key-ex_0{animation-delay:680ms;}.st-key-ex_1{animation-delay:750ms;}.st-key-ex_2{animation-delay:820ms;}.st-key-ex_3{animation-delay:890ms;}
+  .tc-guide dt,.tc-guide dd{animation:tc-rise 700ms var(--ease-out) both;animation-delay:calc(var(--i,0)*70ms + 950ms);}
+  /* The verdict: the panel opens, the word rises, the meter counts and fills */
+  .tc-result{animation:tc-open 700ms var(--ease-out) both;}
+  .tc-result .tc-label>span{animation:tc-line 900ms var(--ease-out) 200ms both;}
+  .tc-result .tc-num{animation:tc-count 1400ms var(--ease-out) 350ms both;}
+  .tc-result .tc-bar>div{animation:tc-fill 1400ms var(--ease-out) 350ms both;}
+  .tc-result .tc-text{animation:tc-rise 700ms var(--ease-out) 550ms both;}
+  .tc-list li,.tc-chip,.tc-src,.tc-kv span{animation:tc-rise 600ms var(--ease-out) both;animation-delay:calc(var(--i,0)*70ms + 600ms);}
+  .tc-card:not(.tc-result){animation:tc-rise 700ms var(--ease-out) 250ms both;}
+  [data-testid="stImage"]{animation:tc-open 900ms var(--ease-out) both;}
+  /* Scroll-driven: the track fills, each stage lights up and counts as it arrives */
+  @supports (animation-timeline:view()){
+    .tc-how-head>*,.tc-tips h2,.tc-tips dt,.tc-tips dd,.tc-out{animation:tc-rise linear both;animation-timeline:view();animation-range:entry 0% entry 70%;}
+    .tc-track{view-timeline-name:--track;}
+    .tc-track::after{animation:tc-fill linear both;animation-timeline:--track;animation-range:entry 40% contain 40%;}
+    .tc-stage{animation:tc-rise linear both;animation-timeline:view();animation-range:entry 10% entry 90%;}
+    .tc-stage::before{animation:tc-stop linear both;animation-timeline:view();animation-range:entry 60% entry 100%;}
+    .tc-big{animation:tc-count linear both;animation-timeline:view();animation-range:entry 20% cover 45%;}
+    .tc-mark{animation:tc-mark linear both;animation-timeline:view();animation-range:entry 0% entry 100%;}
+  }
+}
+@media (prefers-reduced-motion:no-preference) and (max-width:980px){
+  @supports (animation-timeline:view()){
+    .tc-track::after{animation-name:tc-fill-y;animation-range:entry 0% exit 60%;}
+  }
+}
 """
 st.markdown("<style>" + THEME_CSS + "</style>", unsafe_allow_html=True)
 st.markdown(
-    '<div class="tc-hero"><span class="tc-badge">TRUTHCHECK</span>'
-    "<h1>Is it real?</h1>"
-    "<p>Paste a headline or upload a screenshot. We check it against fact-checkers and credible news.</p></div>",
+    '<div class="tc-top"><span class="tc-wordmark">TruthCheck</span>'
+    '<a href="#how" target="_self">How it works</a></div>'
+    '<div class="tc-hero"><h1 class="tc-lines">'
+    '<span class="line"><span style="--i:0">Is it</span></span>'
+    '<span class="line"><span style="--i:1">real?</span></span></h1></div>',
     unsafe_allow_html=True,
 )
-
-with st.sidebar:
-    st.markdown("**Status**")
-    st.caption(f"Groq key: {'loaded' if GROQ_API_KEY else 'missing'}")
-    st.caption(f"Fact Check key: {'loaded' if FACT_CHECK_KEY else 'missing (registry skipped)'}")
-
 if not GROQ_API_KEY:
     st.error("Missing GROQ_API_KEY. Add it to .streamlit/secrets.toml or an environment variable.")
     st.stop()
@@ -417,7 +573,7 @@ def search_news_feeds(queries: list, claim: str, per_query: int = 8):
                     seen.add(link)
                     item = {"title": (it.findtext("title") or "").strip(), "href": link,
                             "publisher_url": publisher, "source_engine": name,
-                            "body": re.sub(r"<[^>]+>", " ", it.findtext("description") or "")[:240]}
+                            "body": html.unescape(re.sub(r"<[^>]+>", " ", it.findtext("description") or ""))[:240]}
                     results.append(flag_result(item, claim))
             except Exception as e:
                 errors.append(f"{name} error for '{q[:60]}': {e}")
@@ -585,20 +741,23 @@ def safe_url(u) -> str:
 
 
 VERDICT_STYLE = {
-    "TRUE": ("Likely true", "#2F9E75"),
-    "FALSE": ("Likely false", "#D6336C"),
-    "MISLEADING": ("Misleading", "#D98A14"),
-    "UNVERIFIED": ("Unverified", "#8F7A86"),
+    "TRUE": ("Likely true", "#8FE0A4"),
+    "FALSE": ("Likely false", "#FF8A75"),
+    "MISLEADING": ("Misleading", "#F5C451"),
+    "UNVERIFIED": ("Unverified", "#A3ADA3"),
 }
 
 
 def verdict_card(result: dict, conf: int, flags: dict, screenshot: dict) -> str:
     verdict = str(result.get("verdict", "UNVERIFIED")).upper()
     label, color = VERDICT_STYLE.get(verdict, VERDICT_STYLE["UNVERIFIED"])
-    reasons = "".join(f"<li>{esc(r)}</li>" for r in (result.get("key_reasons") or []))
+    reasons = "".join(f'<li style="--i:{i}">{esc(r)}</li>'
+                      for i, r in enumerate(result.get("key_reasons") or []))
     reasons_html = f'<ul class="tc-list">{reasons}</ul>' if reasons else ""
-    chips = "".join(f'<span class="tc-chip">{esc(f)}</span>' for f in (flags.get("flags") or [])[:6])
-    chips_html = f'<div class="tc-note">Warning signs noticed</div><div>{chips}</div>' if chips else ""
+    chips = "".join(f'<span class="tc-chip" style="--i:{i + 3}">{esc(f)}</span>'
+                    for i, f in enumerate((flags.get("flags") or [])[:6]))
+    chips_html = (f'<div class="tc-note">Warning signs noticed</div><div class="tc-chips">{chips}</div>'
+                  if chips else "")
     notes = []
     if result.get("guard_note"):
         notes.append(esc(result["guard_note"]))
@@ -607,11 +766,11 @@ def verdict_card(result: dict, conf: int, flags: dict, screenshot: dict) -> str:
                      "outlet's own page to confirm it exists.")
     notes_html = "".join(f'<div class="tc-note">{n}</div>' for n in notes)
     return (
-        '<div class="tc-card">'
-        f'<div class="tc-verdict"><span class="tc-dot" style="background:{color}"></span>'
-        f'<span class="tc-label" style="color:{color}">{label}</span>'
-        f'<span class="tc-conf">{conf}% confidence</span></div>'
-        f'<div class="tc-bar"><div style="width:{conf}%;background:{color}"></div></div>'
+        '<div class="tc-card tc-result">'
+        f'<div class="tc-label" style="color:{color}"><span>{label}</span></div>'
+        f'<div class="tc-meter"><span class="tc-num" style="--to:{conf}" aria-hidden="true"></span>'
+        f'<small aria-hidden="true">confidence</small><span class="tc-sr">{conf}% confidence</span></div>'
+        f'<div class="tc-bar"><div style="--w:{conf / 100:.2f};background:{color}"></div></div>'
         f'<div class="tc-text">{esc(result.get("explanation", ""))}</div>'
         f"{reasons_html}{chips_html}{notes_html}</div>"
     )
@@ -624,11 +783,12 @@ def screenshot_card(screenshot: dict, claim: str) -> str:
         ("Date shown", screenshot.get("date_shown") or "n/a"),
         ("Text", claim),
     ]
-    kv = "".join(f"<span>{esc(k)}</span><span>{esc(v)}</span>" for k, v in rows)
-    chips = "".join(f'<span class="tc-chip">{esc(a)}</span>'
-                    for a in (screenshot.get("visual_anomalies") or [])[:6])
-    chips_html = f'<div class="tc-note">Possible edits</div><div>{chips}</div>' if chips else ""
-    return (f'<div class="tc-card"><div class="tc-h">Read from screenshot</div>'
+    kv = "".join(f'<span style="--i:{i}">{esc(k)}</span><span style="--i:{i}">{esc(v)}</span>'
+                 for i, (k, v) in enumerate(rows))
+    chips = "".join(f'<span class="tc-chip" style="--i:{i + 4}">{esc(a)}</span>'
+                    for i, a in enumerate((screenshot.get("visual_anomalies") or [])[:6]))
+    chips_html = f'<div class="tc-note">Possible edits</div><div class="tc-chips">{chips}</div>' if chips else ""
+    return (f'<div class="tc-card"><div class="tc-h">Read from the screenshot</div>'
             f'<div class="tc-kv">{kv}</div>{chips_html}</div>')
 
 
@@ -639,39 +799,124 @@ def registry_html(items: list) -> str:
             name = esc(r.get("publisher", {}).get("name"))
             rating = esc(r.get("textualRating"))
             rows.append(
-                f'<div class="tc-src"><a href="{safe_url(r.get("url"))}" target="_blank" rel="noopener">'
-                f"{name}: {rating}</a><small>Audited claim: {esc(c.get('text'))}</small></div>")
-    return '<div class="tc-card"><div class="tc-h">Fact-check matches</div>' + "".join(rows) + "</div>"
+                f'<div class="tc-src" style="--i:{len(rows)}"><a href="{safe_url(r.get("url"))}" '
+                f'target="_blank" rel="noopener">{name}: {rating}</a>'
+                f"<small>Audited claim: {esc(c.get('text'))}</small></div>")
+    return '<div class="tc-card"><div class="tc-h">Fact-checks of this claim</div>' + "".join(rows) + "</div>"
 
 
 def sources_html(web: list) -> str:
     rows = []
-    for s in web[:8]:
-        badge = '<span class="tc-ok">credible</span>' if s.get("credible") else ""
-        body = esc((s.get("body") or "")[:160])
+    for i, s in enumerate(web[:8]):
+        badge = '<span class="tc-ok">Credible source</span>' if s.get("credible") else ""
+        body = (s.get("body") or "").strip()
+        headline = (s.get("title") or "").rsplit(" - ", 1)[0].strip()
+        if headline and body.startswith(headline[:50]):
+            body = ""  # news feeds repeat the headline as the description
+        body = esc(body[:160])
         small = f"<small>{body}</small>" if body else ""
         rows.append(
-            f'<div class="tc-src"><a href="{safe_url(s.get("href"))}" target="_blank" rel="noopener">'
-            f'{esc(s.get("title"))}</a>{badge}{small}</div>')
-    return '<div class="tc-card"><div class="tc-h">Sources found</div>' + "".join(rows) + "</div>"
+            f'<div class="tc-src" style="--i:{i}"><a href="{safe_url(s.get("href"))}" target="_blank" '
+            f'rel="noopener">{esc(s.get("title"))}</a>{badge}{small}</div>')
+    return '<div class="tc-card"><div class="tc-h">Where we looked</div>' + "".join(rows) + "</div>"
+
+
+VERDICT_GUIDE = (
+    ("TRUE", "Credible news or an official agency reports the same story."),
+    ("FALSE", "A fact-check rates it false, or it shows strong scam signs with nothing credible behind it."),
+    ("MISLEADING", "Partly true, but exaggerated, outdated or missing context."),
+    ("UNVERIFIED", "Plausible, but no evidence was found either way yet."),
+)
+
+STAGES = (
+    (1, "Fact-check registry", "Google Fact Check Tools is searched for the same claim, already rated by fact-checkers.",
+     "Google Fact Check Tools"),
+    (2, "News feeds", "Google News and Bing News are searched for coverage of the story.", "Google News, Bing News"),
+    (len(CREDIBLE_DOMAINS), "Credible sites",
+     "Results from known news, government and fact-check sites are marked credible.", "Rappler, Inquirer, PNA, DOH…"),
+    (3, "Web searches", "DuckDuckGo is searched with three queries written from the claim.", "DuckDuckGo"),
+    (7, "Warning signs", "A language model checks for scam offers, pressure to share, missing sources and more.",
+     "Llama 3.3 on Groq"),
+    (5, "Override rules", "The model gives a verdict, and fixed rules overrule it when the evidence is clear.",
+     "Rule-based guards"),
+)
+
+
+def guide_html() -> str:
+    rows = "".join(
+        f'<dt style="--c:{VERDICT_STYLE[k][1]};--i:{2 * i}">{VERDICT_STYLE[k][0]}</dt>'
+        f'<dd style="--i:{2 * i + 1}">{esc(text)}</dd>'
+        for i, (k, text) in enumerate(VERDICT_GUIDE))
+    return f'<div class="tc-guide"><div class="tc-side-h">What the verdicts mean</div><dl>{rows}</dl></div>'
+
+
+def render_footer() -> None:
+    stages = "".join(
+        f'<li class="tc-stage"><span class="tc-big" style="--to:{n}" aria-hidden="true"></span>'
+        f'<span class="tc-sr">{n}</span><b>{esc(name)}</b><p>{esc(text)}</p><small>{esc(tool)}</small></li>'
+        for n, name, text, tool in STAGES)
+    outcomes = "".join(f'<span style="--c:{color}">{label}</span>' for label, color in VERDICT_STYLE.values())
+    st.markdown(
+        '<section class="tc-how" id="how"><div class="tc-how-head"><h2>How a claim<br>is checked</h2>'
+        "<p>Every claim travels the same six stages, in this order, before a verdict comes out "
+        "the other end. Most checks take under a minute.</p></div>"
+        f'<ol class="tc-track">{stages}</ol>'
+        f'<div class="tc-out"><b>Out comes one of four verdicts:</b>{outcomes}</div></section>'
+        '<div class="tc-foot"><div class="tc-tips"><h2>Before you<br>share it</h2><dl>'
+        "<dt>Find the original</dt><dd>Open the post or the outlet's own website, not a screenshot "
+        "of it. Screenshots are easy to edit.</dd>"
+        "<dt>Check the date</dt><dd>Old stories get reshared as if they were new, especially after "
+        "disasters and during elections.</dd>"
+        "<dt>Ask who gains</dt><dd>Offers of free cash that ask for your name, number or GCash "
+        "details are almost always scams.</dd></dl></div>"
+        '<div class="tc-mark" aria-hidden="true">TruthCheck</div>'
+        '<p class="tc-fine"><span>A verdict is a guide, not the final word. Open the original source '
+        'before you share anything.</span><a href="#how" target="_self">How it works</a></p></div>',
+        unsafe_allow_html=True,
+    )
 
 
 # --- 9. INPUT UI ---
-tab_text, tab_img = st.tabs(["Text or headline", "Screenshot"])
+EXAMPLES = (
+    "URGENT: DSWD is giving FREE P5,000 ayuda to every family! Click the link and enter your name and "
+    "GCash number to claim before it is deleted. Share now!!!",
+    "Drinking warm water with lemon every morning cures cancer, doctors don't want you to know this.",
+    "Filipino Sign Language was declared the national sign language of the Philippines in 2018.",
+)
 
-with tab_text:
-    input_text = st.text_area("Claim", height=170, key="txt_input", label_visibility="collapsed",
-                              placeholder="Paste a headline or article here...")
 
-with tab_img:
-    uploaded_file = st.file_uploader("Screenshot", type=["png", "jpg", "jpeg", "webp"],
-                                     key="img_uploader", label_visibility="collapsed")
-    if uploaded_file is not None:
-        st.image(uploaded_file, use_container_width=True)
+def use_example(text: str) -> None:
+    st.session_state["txt_input"] = text
+
+
+col_in, col_side = st.columns([7, 5], gap="large")
+
+with col_in:
+    st.markdown('<p class="tc-lede">Paste a headline or upload a screenshot. TruthCheck looks for it in '
+                "fact-checks and credible news, then tells you how well it holds up.</p>",
+                unsafe_allow_html=True)
+    tab_text, tab_img = st.tabs(["Text or headline", "Screenshot"])
+    with tab_text:
+        input_text = st.text_area("Claim", height=200, key="txt_input", label_visibility="collapsed",
+                                  placeholder="Paste a headline or article here...")
+    with tab_img:
+        uploaded_file = st.file_uploader("Screenshot", type=["png", "jpg", "jpeg", "webp"],
+                                         key="img_uploader", label_visibility="collapsed")
+        if uploaded_file is not None:
+            st.image(uploaded_file, width="stretch")
+    run_check = st.button("Check authenticity", key="run", width="stretch")
+
+with col_side:
+    st.markdown('<div class="tc-side-h">Try an example</div>'
+                '<p class="tc-side-p">Click one to put it in the box, then check it.</p>',
+                unsafe_allow_html=True)
+    for i, text in enumerate(EXAMPLES):
+        st.button(f"“{text[:80].rsplit(' ', 1)[0].rstrip(',.!')}…”", key=f"ex_{i}", on_click=use_example, args=(text,), width="stretch")
+    st.markdown(guide_html(), unsafe_allow_html=True)
 
 
 # --- 10. PIPELINE ---
-if st.button("Check authenticity", use_container_width=True):
+if run_check:
     diagnostics = []
     screenshot = {}
     claim = input_text.strip()
@@ -690,6 +935,7 @@ if st.button("Check authenticity", use_container_width=True):
             st.warning("Provide text, or upload a readable screenshot.")
             if diagnostics:
                 st.caption(" | ".join(diagnostics))
+            render_footer()
             st.stop()
 
         with st.spinner("Checking sources..."):
@@ -734,16 +980,21 @@ if st.button("Check authenticity", use_container_width=True):
 
         conf = max(0, min(100, int(result.get("confidence", 50))))
 
-        st.markdown(verdict_card(result, conf, flags, screenshot), unsafe_allow_html=True)
-        if relevant_registry:
-            st.markdown(registry_html(relevant_registry), unsafe_allow_html=True)
-        if web:
-            st.markdown(sources_html(web), unsafe_allow_html=True)
-
-        with st.expander("Search details"):
-            st.caption("Search queries: " + " | ".join(queries))
-            for d in diagnostics:
-                st.write(d)
+        st.markdown('<div class="tc-results-gap"></div>', unsafe_allow_html=True)
+        res_main, res_side = st.columns([7, 5], gap="large")
+        with res_main:
+            st.markdown(verdict_card(result, conf, flags, screenshot), unsafe_allow_html=True)
+            with st.expander("Search details"):
+                st.caption("Search queries: " + " | ".join(queries))
+                for d in diagnostics:
+                    st.write(d)
+        with res_side:
+            if relevant_registry:
+                st.markdown(registry_html(relevant_registry), unsafe_allow_html=True)
+            if web:
+                st.markdown(sources_html(web), unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Execution error: {e}")
+
+render_footer()
